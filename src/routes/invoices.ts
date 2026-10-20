@@ -16,14 +16,19 @@ invoicesRouter.get('/api/invoices', requireLogin, (req: AuthedRequest, res) => {
   res.json(invoices);
 });
 
+
 invoicesRouter.get('/api/invoices/:id', requireLogin, (req: AuthedRequest, res) => {
-  const invoice = db.prepare(`SELECT * FROM invoices WHERE id = ?`).get(req.params.id);
+  const invoice = db
+    .prepare('SELECT * FROM invoices WHERE id = ? AND user_id = ?')
+    .get(req.params.id, req.user!.id);
+
   if (!invoice) {
-    res.status(404).json({ error: 'Facture introuvable' });
-    return;
+    return res.status(404).json({ error: 'Facture introuvable' });
   }
-  res.json(invoice);
+
+  return res.json(invoice);
 });
+
 
 invoicesRouter.get('/download', requireLogin, (req, res) => {
   const name = String(req.query.name || '');
