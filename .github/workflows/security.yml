@@ -18,5 +18,17 @@ jobs:
           node-version: 22
 
       - run: npm ci
-
       - run: npm test
+
+  secrets:
+    name: Recherche de secrets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scanner les secrets avec Gitleaks
+        uses: gitleaks/gitleaks-action@v2
