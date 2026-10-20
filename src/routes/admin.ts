@@ -31,7 +31,7 @@ adminRouter.get('/api/admin/diagnostic', requireLogin, (req, res) => {
         return res.status(400).json({
             error: 'Hôte non autorisé'
         });
-    }
+    }//CORRIGER
 
   exec(`ping -c 1 ${host}`, { timeout: 3000 }, (error, stdout, stderr) => {
     if (error) {

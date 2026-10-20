@@ -60,6 +60,20 @@ test('GET /api/admin/diagnostic refuse un hôte non autorisé', async () => {
     });
 });
 
+
+test('POST /login refuse une injection SQL', async () => {
+    const res = await request(app)
+        .post('/login')
+        .send({
+            email: "' OR '1'='1' -- ",
+            password: 'mauvais_mot_de_passe'
+        });
+
+    assert.equal(res.status, 401);
+    assert.equal(res.body.token, undefined);
+});
+
+
 // --- À vous ---
 // Inspirez-vous de ce test pour écrire les vôtres : vous aurez besoin de
 // vous connecter d'abord dans la plupart des cas, par exemple :
