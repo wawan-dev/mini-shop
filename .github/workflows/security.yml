@@ -21,16 +21,38 @@ jobs:
       - run: npm test
 
   secrets:
-    name: Recherche de secrets
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  
+  dependencies:
+    name: Audit des dépendances
     runs-on: ubuntu-latest
 
     steps:
       - name: Récupérer le code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Scanner les secrets avec Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Vérifier les vulnérabilités
+        run: npm audit --audit-level=high
+
+
+
+
+    
