@@ -46,9 +46,6 @@ jobs:
             --redact \
             --verbose
 
-      
-
-  
   dependencies:
     name: Audit des dépendances
     runs-on: ubuntu-latest
