@@ -48,12 +48,15 @@ authRouter.post('/login', (req, res) => {
 
   const hash = md5(password);
 
-  const sql = `SELECT * FROM users WHERE email = '${email}' AND password_hash = '${hash}'`;
+    const sql = db.prepare(
+        'SELECT * FROM users WHERE email = ? AND password_hash = ?'
+    ); //Corriger
+
   logEvent(`Tentative de connexion, requête exécutée : ${sql}`);
 
   let user: any;
   try {
-    user = db.prepare(sql).get();
+    user = sql.get(email, hash);
   } catch (err: any) {
     res.status(500).json({ error: 'Erreur serveur', detail: String(err?.message || err) });
     return;
