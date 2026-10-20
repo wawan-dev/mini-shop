@@ -21,6 +21,8 @@ adminRouter.get('/api/admin/orders', requireLogin, (_req, res) => {
 adminRouter.get('/api/admin/diagnostic', requireLogin, (req, res) => {
   const host = String(req.query.host || '127.0.0.1');
 
+  //TODO CORRECTION
+
   exec(`ping -c 1 ${host}`, { timeout: 3000 }, (error, stdout, stderr) => {
     if (error) {
       res.status(500).json({ error: 'Hôte injoignable', detail: stderr || String(error) });

@@ -37,6 +37,29 @@ test('GET /api/products renvoie la liste des produits', async () => {
   assert.ok(res.body.length > 0, 'le tableau ne doit pas être vide');
 });
 
+test('GET /api/admin/diagnostic refuse un hôte non autorisé', async () => {
+    const login = await request(app)
+        .post('/login')
+        .send({
+            email: 'alice@minishop.test',
+            password: 'Password123'
+        });
+
+    assert.equal(login.status, 200);
+
+    const token = login.body.token;
+
+    const res = await request(app)
+        .get('/api/admin/diagnostic')
+        .query({ host: '127.0.0.1;echo test' })
+        .set('Authorization', `Bearer ${token}`);
+
+    assert.equal(res.status, 400);
+    assert.deepEqual(res.body, {
+        error: 'Hôte non autorisé'
+    });
+});
+
 // --- À vous ---
 // Inspirez-vous de ce test pour écrire les vôtres : vous aurez besoin de
 // vous connecter d'abord dans la plupart des cas, par exemple :
