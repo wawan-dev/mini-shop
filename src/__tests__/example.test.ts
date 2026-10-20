@@ -61,6 +61,48 @@ test('GET /api/admin/diagnostic refuse un hôte non autorisé', async () => {
 });
 
 
+test('GET /api/invoices/:id refuse la facture d’un autre utilisateur', async () => {
+    // Connexion du premier utilisateur
+    const loginAlice = await request(app)
+        .post('/login')
+        .send({
+            email: 'alice@minishop.test',
+            password: 'Password123'
+        });
+
+    const tokenAlice = loginAlice.body.token;
+
+    // Connexion du deuxième utilisateur
+    const loginBob = await request(app)
+        .post('/login')
+        .send({
+            email: 'bob@minishop.test',
+            password: 'Password123'
+        });
+
+    const tokenBob = loginBob.body.token;
+
+    // Alice récupère ses factures
+    const invoicesAlice = await request(app)
+        .get('/api/invoices')
+        .set('Authorization', `Bearer ${tokenAlice}`);
+
+    // Vérifier qu'Alice possède au moins une facture
+    assert.ok(invoicesAlice.body.length > 0);
+
+    const invoiceId = invoicesAlice.body[0].id;
+
+    // Bob tente d'accéder à la facture d'Alice
+    const res = await request(app)
+        .get(`/api/invoices/${invoiceId}`)
+        .set('Authorization', `Bearer ${tokenBob}`);
+
+    assert.equal(res.status, 404);
+    assert.deepEqual(res.body, { error: 'Facture introuvable' });
+});
+
+
+
 test('POST /login refuse une injection SQL', async () => {
     const res = await request(app)
         .post('/login')
