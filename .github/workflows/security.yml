@@ -63,7 +63,7 @@ jobs:
           node-version: 22
 
       - name: Installer les dépendances
-        run: npm install
+        run: npm ci
 
       - name: Vérifier les vulnérabilités
         run: npm audit --audit-level=high
