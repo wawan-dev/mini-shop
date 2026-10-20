@@ -5,3 +5,4 @@ data/secret-interne.txt
 files/*.pdf
 files/*.txt
 *.log
+/.vs
