@@ -77,7 +77,7 @@ test('GET /api/invoices/:id refuse la facture d’un autre utilisateur', async (
         .post('/login')
         .send({
             email: 'bob@minishop.test',
-            password: 'Password123'
+            password: 'Soleil2024'
         });
 
     const tokenBob = loginBob.body.token;
