@@ -20,17 +20,33 @@ jobs:
       - run: npm ci
       - run: npm test
 
+  
   secrets:
     name: gitleaks
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v6
+      - name: Récupérer tout le dépôt
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+      - name: Installer Gitleaks
+        run: |
+          GITLEAKS_VERSION=8.24.3
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo install gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Scanner tout l'historique Git
+        run: |
+          gitleaks git . \
+            --config=.gitleaks.toml \
+            --redact \
+            --verbose
+
+      
 
   
   dependencies:
