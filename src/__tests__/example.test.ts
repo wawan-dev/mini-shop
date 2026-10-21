@@ -129,6 +129,34 @@ test('GET /products échappe la valeur q pour empêcher une XSS', async () => {
     assert.ok(!res.text.includes("<script>alert('XSS')</script>"));
 });
 
+test('PUT /api/profile empêche un client de devenir admin', async () => {
+    const login = await request(app)
+        .post('/login')
+        .send({
+            email: 'alice@minishop.test',
+            password: 'Password123'
+        });
+
+    assert.equal(login.status, 200);
+    const token = login.body.token;
+
+    const res = await request(app)
+        .put('/api/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+            name: 'Alice',
+            role: 'admin'
+        });
+
+    // Le rôle ne doit pas pouvoir être modifié
+    assert.notEqual(res.body.role, 'admin');
+
+    const profile = await request(app)
+        .get('/api/profile')
+        .set('Authorization', `Bearer ${token}`);
+
+    assert.notEqual(profile.body.role, 'admin');
+});
 
 // --- À vous ---
 // Inspirez-vous de ce test pour écrire les vôtres : vous aurez besoin de
