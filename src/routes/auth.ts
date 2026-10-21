@@ -5,6 +5,18 @@ import crypto from 'crypto';
 import { db } from '../db';
 import bcrypte from 'bcryptjs';
 import { createToken } from '../middleware/auth';
+import rateLimit from 'express-rate-limit';
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+        console.log('LIMITE ATTEINTE :', req.ip);
+        return res.status(429).json({ error: 'Trop de tentatives échouées. Réessayez dans 15 minutes.' });
+    }
+});
 
 export const authRouter = Router();
 
@@ -39,7 +51,7 @@ authRouter.post('/register', (req, res) => {
   const token = createToken({ id: Number(info.lastInsertRowid), email, role: 'client' });
   res.status(201).json({ token, user: { id: info.lastInsertRowid, email, name, role: 'client' } });
 });
-authRouter.post('/login', async (req, res) => {
+authRouter.post('/login', loginLimiter, async (req, res) => {
     const { email, password } = req.body || {};
 
     if (!email || !password) {
@@ -63,10 +75,7 @@ authRouter.post('/login', async (req, res) => {
             });
         }
 
-        const passwordValid = await bcrypte.compare(
-            password,
-            user.password
-        );
+        const passwordValid = await bcrypte.compare(password, user.password_hash);
 
         if (!passwordValid) {
             return res.status(401).json({
