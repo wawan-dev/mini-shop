@@ -115,6 +115,20 @@ test('POST /login refuse une injection SQL', async () => {
     assert.equal(res.body.token, undefined);
 });
 
+test('GET /products échappe la valeur q pour empêcher une XSS', async () => {
+    const payload = "<script>alert('XSS')</script>";
+
+    const res = await request(app)
+        .get('/products')
+        .query({ q: payload });
+
+    assert.equal(res.status, 200);
+
+    // Le HTML doit contenir le texte échappé, pas une balise script exécutable
+    assert.ok(res.text.includes('&lt;script&gt;'));
+    assert.ok(!res.text.includes("<script>alert('XSS')</script>"));
+});
+
 
 // --- À vous ---
 // Inspirez-vous de ce test pour écrire les vôtres : vous aurez besoin de
