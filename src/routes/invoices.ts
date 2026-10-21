@@ -31,15 +31,22 @@ invoicesRouter.get('/api/invoices/:id', requireLogin, (req: AuthedRequest, res) 
 
 
 invoicesRouter.get('/download', requireLogin, (req, res) => {
-  const name = String(req.query.name || '');
+    const name = String(req.query.name || '');
 
-  const fullPath = path.join(FILES_DIR, name);
-
-  fs.readFile(fullPath, 'utf-8', (err, data) => {
-    if (err) {
-      res.status(404).send('Fichier introuvable');
-      return;
+    // Refuser les chemins et les noms de fichiers invalides
+    if (!name || name === '.' || name === '..' || path.basename(name) !== name || name.includes('/') || name.includes('\\')) {
+        return res.status(400).send('Nom de fichier invalide');
     }
-    res.type('text/plain').send(data);
-  });
+
+    const fullPath = path.resolve(FILES_DIR, name);
+
+    // Vérifier que le fichier reste dans le dossier autorisé
+    if (path.dirname(fullPath) !== path.resolve(FILES_DIR)) {
+        return res.status(400).send('Chemin interdit');
+    }
+
+    fs.readFile(fullPath, 'utf-8', (err, data) => {
+        if (err) return res.status(404).send('Fichier introuvable');
+        return res.type('text/plain').send(data);
+    });
 });
