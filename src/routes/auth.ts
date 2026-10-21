@@ -33,7 +33,8 @@ authRouter.post('/register', (req, res) => {
   if (!email || !name || !password) {
     res.status(400).json({ error: 'email, name et password sont requis' });
     return;
-  }
+    }
+
 
   const exists = db.prepare(`SELECT id FROM users WHERE email = ?`).get(email);
   if (exists) {
