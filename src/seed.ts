@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { db, initSchema } from './db';
+import bcrypte from 'bcryptjs';
 
 function md5(input: string): string {
   return crypto.createHash('md5').update(input).digest('hex');
@@ -29,9 +30,9 @@ export function seed(): void {
   const insertUser = db.prepare(
     `INSERT INTO users (email, name, phone, password_hash, role) VALUES (?, ?, ?, ?, ?)`
   );
-  const alice = insertUser.run('alice@minishop.test', 'Alice Martin', '0601020304', md5('Password123'), 'client');
-  const bob   = insertUser.run('bob@minishop.test',   'Bob Durand',   '0605060708', md5('Soleil2024'),  'client');
-  insertUser.run('admin@minishop.test', 'Admin MiniShop', '0600000000', md5('AdminAdmin1'), 'admin');
+  const alice = insertUser.run('alice@minishop.test', 'Alice Martin', '0601020304', bcrypte.hash('Password123',2), 'client');
+    const bob = insertUser.run('bob@minishop.test', 'Bob Durand', '0605060708', bcrypte.hash('Soleil2024',2),  'client');
+    insertUser.run('admin@minishop.test', 'Admin MiniShop', '0600000000', bcrypte.hash('AdminAdmin1',2), 'admin');
 
   const insertProduct = db.prepare(`INSERT INTO products (name, description, price, stock) VALUES (?, ?, ?, ?)`);
   const products = [

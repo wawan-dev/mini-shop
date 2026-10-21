@@ -3,6 +3,7 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { db } from '../db';
+import bcrypte from 'bcryptjs';
 import { createToken } from '../middleware/auth';
 
 export const authRouter = Router();
@@ -28,7 +29,7 @@ authRouter.post('/register', (req, res) => {
     return;
   }
 
-  const hash = md5(password);
+  const hash = bcrypte.hash(password,2);
   const info = db
     .prepare(`INSERT INTO users (email, name, phone, password_hash, role) VALUES (?, ?, ?, ?, 'client')`)
     .run(email, name, phone || null, hash);
@@ -38,36 +39,61 @@ authRouter.post('/register', (req, res) => {
   const token = createToken({ id: Number(info.lastInsertRowid), email, role: 'client' });
   res.status(201).json({ token, user: { id: info.lastInsertRowid, email, name, role: 'client' } });
 });
+authRouter.post('/login', async (req, res) => {
+    const { email, password } = req.body || {};
 
-authRouter.post('/login', (req, res) => {
-  const { email, password } = req.body || {};
-  if (!email || !password) {
-    res.status(400).json({ error: 'email et password sont requis' });
-    return;
-  }
-
-  const hash = md5(password);
+    if (!email || !password) {
+        return res.status(400).json({
+            error: 'email et password sont requis'
+        });
+    }
 
     const sql = db.prepare(
-        'SELECT * FROM users WHERE email = ? AND password_hash = ?'
-    ); //Corriger
+        'SELECT * FROM users WHERE email = ?'
+    );
 
-  logEvent(`Tentative de connexion, requête exécutée : ${sql}`);
+    let user: any;
 
-  let user: any;
-  try {
-    user = sql.get(email, hash);
-  } catch (err: any) {
-    res.status(500).json({ error: 'Erreur serveur', detail: String(err?.message || err) });
-    return;
-  }
+    try {
+        user = sql.get(email);
 
-  if (!user) {
-    res.status(401).json({ error: 'Identifiants invalides' });
-    return;
-  }
+        if (!user) {
+            return res.status(401).json({
+                error: 'Identifiants invalides'
+            });
+        }
 
-  logEvent(`Connexion réussie pour ${user.email} (role=${user.role})`);
-  const token = createToken({ id: user.id, email: user.email, role: user.role });
-  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
+        const passwordValid = await bcrypte.compare(
+            password,
+            user.password
+        );
+
+        if (!passwordValid) {
+            return res.status(401).json({
+                error: 'Identifiants invalides'
+            });
+        }
+    } catch (err: any) {
+        return res.status(500).json({
+            error: 'Erreur serveur'
+        });
+    }
+
+    logEvent(`Connexion réussie pour ${user.email} (role=${user.role})`);
+
+    const token = createToken({
+        id: user.id,
+        email: user.email,
+        role: user.role
+    });
+
+    return res.json({
+        token,
+        user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role
+        }
+    });
 });
