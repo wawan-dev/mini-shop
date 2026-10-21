@@ -76,7 +76,7 @@ productsRouter.get('/products', (req, res) => {
       <body>
         <header><a href="/">🛍️ MiniShop</a></header>
         <main>
-          <h1>Résultats pour : ${q}</h1>
+          <h1>Résultats pour : ${htmlspecialchars(q)}</h1>
           <div class="results-grid">${items || '<p class="empty">Aucun résultat.</p>'}</div>
           <a class="back-link" href="/">&larr; Retour à la boutique</a>
         </main>
@@ -84,3 +84,12 @@ productsRouter.get('/products', (req, res) => {
     </html>
   `);
 });
+
+function htmlspecialchars(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
